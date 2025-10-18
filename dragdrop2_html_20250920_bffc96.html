@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉语方位词拖放游戏</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', '微软雅黑', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 800px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #2575fc;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        .instructions {
+            background: #f0f8ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .instructions h2 {
+            color: #6a11cb;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            background: #f0f8ff;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+        
+        .level, .score {
+            font-size: 18px;
+            color: #6a11cb;
+        }
+        
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .sentence-display {
+            font-size: 24px;
+            margin-bottom: 30px;
+            color: #2c3e50;
+            font-weight: bold;
+            min-height: 60px;
+            padding: 15px;
+            background: #e9f7ff;
+            border-radius: 12px;
+            width: 100%;
+        }
+        
+        .pinyin-display {
+            font-size: 18px;
+            margin-top: 10px;
+            color: #6a11cb;
+            display: none;
+        }
+        
+        .drop-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 15px;
+            width: 400px;
+            height: 400px;
+            margin-bottom: 30px;
+            position: relative;
+            background: #f8f9fa;
+            border: 2px dashed #6a11cb;
+            border-radius: 15px;
+            padding: 20px;
+        }
+        
+        .drop-target {
+            width: 100px;
+            height: 100px;
+            border: 2px solid #2575fc;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            background: white;
+        }
+        
+        .center-target {
+            grid-column: 2;
+            grid-row: 2;
+            background: #e9f7ff;
+        }
+        
+        .north-target {
+            grid-column: 2;
+            grid-row: 1;
+            background: #ffe9ec;
+        }
+        
+        .south-target {
+            grid-column: 2;
+            grid-row: 3;
+            background: #e9ffe9;
+        }
+        
+        .east-target {
+            grid-column: 3;
+            grid-row: 2;
+            background: #e9f7ff;
+        }
+        
+        .west-target {
+            grid-column: 1;
+            grid-row: 2;
+            background: #fff4e9;
+        }
+        
+        .drag-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .drag-item {
+            width: 100px;
+            height: 100px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: move;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+            user-select: none;
+        }
+        
+        .drag-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .circle {
+            background: white;
+            border: 3px solid #6a11cb;
+            border-radius: 50%;
+        }
+        
+        .square {
+            background: #2575fc;
+            color: white;
+            border: 3px solid #6a11cb;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        #playSound {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+        }
+        
+        #checkBtn {
+            background: linear-gradient(to right, #25ac64, #2fe87a);
+            color: white;
+        }
+        
+        #nextBtn {
+            background: linear-gradient(to right, #ff8a00, #ffb900);
+            color: white;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .progress-bar {
+            height: 12px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin: 25px 0;
+            overflow: hidden;
+            width: 100%;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        .level-up {
+            animation: levelUp 1s ease;
+        }
+        
+        @keyframes levelUp {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .game-complete {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+        
+        .game-complete h2 {
+            color: #6a11cb;
+            margin-bottom: 20px;
+        }
+        
+        .restart-btn {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 600px) {
+            .drop-container {
+                width: 300px;
+                height: 300px;
+            }
+            
+            .drop-target, .drag-item {
+                width: 80px;
+                height: 80px;
+                font-size: 14px;
+            }
+            
+            .sentence-display {
+                font-size: 18px;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>汉语方位词拖放游戏</h1>
+        
+        <div class="instructions">
+            <h2>游戏指南</h2>
+            <ol>
+                <li>点击"播放语音"按钮听句子</li>
+                <li>根据句子意思，将蓝色方块拖放到正确的位置</li>
+                <li>白色圆形是固定的参考点</li>
+                <li>检查答案后，如果正确，会显示原句和拼音</li>
+                <li>点击"下一题"继续</li>
+                <li>完成所有题目后游戏结束</li>
+            </ol>
+        </div>
+        
+        <div class="game-info">
+            <div class="level">关卡: <span id="level">1</span>/10</div>
+            <div class="score">得分: <span id="score">0</span></div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        
+        <div class="game-area">
+            <div class="sentence-display" id="sentenceDisplay">点击播放按钮听句子</div>
+            <div class="pinyin-display" id="pinyinDisplay"></div>
+            
+            <div class="drop-container">
+                <div class="drop-target north-target" id="north">北边</div>
+                <div class="drop-target west-target" id="west">西边</div>
+                <div class="drop-target center-target" id="center">中心</div>
+                <div class="drop-target east-target" id="east">东边</div>
+                <div class="drop-target south-target" id="south">南边</div>
+            </div>
+            
+            <div class="drag-container" id="dragContainer">
+                <!-- 拖拽元素将通过JavaScript动态生成 -->
+            </div>
+        </div>
+        
+        <div class="feedback" id="feedback"></div>
+        
+        <div class="controls">
+            <button id="playSound">播放语音</button>
+            <button id="checkBtn">检查答案</button>
+            <button id="nextBtn">下一题</button>
+        </div>
+        
+        <div class="game-complete" id="gameComplete">
+            <h2>恭喜您完成所有关卡！</h2>
+            <p>您的最终得分: <span id="finalScore">0</span></p>
+            <button class="restart-btn" id="restartBtn">重新开始</button>
+        </div>
+    </div>
+
+    <script>
+        // 游戏数据
+        const gameData = [
+            {
+                sentence: "图书馆在教学楼北边。",
+                pinyin: "Túshūguǎn zài jiàoxuélóu běibian.",
+                circles: ["教学楼"],
+                squares: ["图书馆"],
+                correctPosition: {square: "图书馆", relativeTo: "教学楼", direction: "north"}
+            },
+            {
+                sentence: "超市在饭馆东边。",
+                pinyin: "Chāoshì zài fànguǎn dōngbian.",
+                circles: ["饭馆"],
+                squares: ["超市"],
+                correctPosition: {square: "超市", relativeTo: "饭馆", direction: "east"}
+            },
+            {
+                sentence: "超市在饭馆西边。",
+                pinyin: "Chāoshì zài fànguǎn xībian.",
+                circles: ["饭馆"],
+                squares: ["超市"],
+                correctPosition: {square: "超市", relativeTo: "饭馆", direction: "west"}
+            },
+            {
+                sentence: "运动场在教学楼西边。",
+                pinyin: "Yùndòngchǎng zài jiàoxuélóu xībian.",
+                circles: ["教学楼"],
+                squares: ["运动场"],
+                correctPosition: {square: "运动场", relativeTo: "教学楼", direction: "west"}
+            },
+            {
+                sentence: "运动场在体育馆南边。",
+                pinyin: "Yùndòngchǎng zài tǐyùguǎn nánbian.",
+                circles: ["体育馆"],
+                squares: ["运动场"],
+                correctPosition: {square: "运动场", relativeTo: "体育馆", direction: "south"}
+            },
+            {
+                sentence: "我在图书馆北边。",
+                pinyin: "Wǒ zài túshūguǎn běibian.",
+                circles: ["图书馆"],
+                squares: ["我"],
+                correctPosition: {square: "我", relativeTo: "图书馆", direction: "north"}
+            },
+            {
+                sentence: "图书馆在教学楼北边。",
+                pinyin: "Túshūguǎn zài jiàoxuélóu běibian.",
+                circles: ["教学楼"],
+                squares: ["图书馆"],
+                correctPosition: {square: "图书馆", relativeTo: "教学楼", direction: "north"}
+            },
+            {
+                sentence: "运动场和体育馆在教学楼西边。",
+                pinyin: "Yùndòngchǎng hé tǐyùguǎn zài jiàoxuélóu xībian.",
+                circles: ["教学楼"],
+                squares: ["运动场", "体育馆"],
+                correctPosition: [
+                    {square: "运动场", relativeTo: "教学楼", direction: "west"},
+                    {square: "体育馆", relativeTo: "教学楼", direction: "west"}
+                ]
+            },
+            {
+                sentence: "留学生楼在运动场南边。",
+                pinyin: "Liúxuéshēng lóu zài yùndòngchǎng nánbian.",
+                circles: ["运动场"],
+                squares: ["留学生楼"],
+                correctPosition: {square: "留学生楼", relativeTo: "运动场", direction: "south"}
+            },
+            {
+                sentence: "留学生楼西边有一个饭馆，还有一个超市。",
+                pinyin: "Liúxuéshēng lóu xībian yǒu yīgè fànguǎn, hái yǒu yīgè chāoshì.",
+                circles: ["留学生楼"],
+                squares: ["饭馆", "超市"],
+                correctPosition: [
+                    {square: "饭馆", relativeTo: "留学生楼", direction: "west"},
+                    {square: "超市", relativeTo: "留学生楼", direction: "west"}
+                ]
+            }
+        ];
+
+        // 词汇库
+        const vocabulary = [
+            "教学楼", "图书馆", "运动场", "体育馆", "饭馆", 
+            "超市", "银行", "中国银行", "卫生间", "商店", 
+            "书店", "邮局", "桌子", "苹果", "书", "笔", "我", "留学生楼"
+        ];
+
+        // 游戏状态变量
+        let currentLevel = 0;
+        let score = 0;
+        let draggedElement = null;
+        let currentPositions = {};
+
+        // DOM元素
+        const levelElement = document.getElementById('level');
+        const scoreElement = document.getElementById('score');
+        const progressElement = document.getElementById('progress');
+        const sentenceDisplay = document.getElementById('sentenceDisplay');
+        const pinyinDisplay = document.getElementById('pinyinDisplay');
+        const dragContainer = document.getElementById('dragContainer');
+        const feedbackElement = document.getElementById('feedback');
+        const playSoundBtn = document.getElementById('playSound');
+        const checkBtn = document.getElementById('checkBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const gameCompleteElement = document.getElementById('gameComplete');
+        const finalScoreElement = document.getElementById('finalScore');
+        const restartBtn = document.getElementById('restartBtn');
+        const dropTargets = {
+            north: document.getElementById('north'),
+            south: document.getElementById('south'),
+            east: document.getElementById('east'),
+            west: document.getElementById('west'),
+            center: document.getElementById('center')
+        };
+
+        // 初始化游戏
+        function initGame() {
+            currentLevel = 0;
+            score = 0;
+            currentPositions = {};
+            updateUI();
+            loadLevel();
+            
+            // 隐藏游戏完成界面，显示游戏界面
+            gameCompleteElement.style.display = 'none';
+            document.querySelector('.game-info').style.display = 'flex';
+            document.querySelector('.progress-bar').style.display = 'block';
+            sentenceDisplay.style.display = 'block';
+            pinyinDisplay.style.display = 'none';
+            document.querySelector('.drop-container').style.display = 'grid';
+            dragContainer.style.display = 'flex';
+            feedbackElement.style.display = 'none';
+            document.querySelector('.controls').style.display = 'flex';
+        }
+
+        // 更新UI显示
+        function updateUI() {
+            levelElement.textContent = currentLevel + 1;
+            scoreElement.textContent = score;
+            progressElement.style.width = `${((currentLevel + 1) / gameData.length) * 100}%`;
+        }
+
+        // 加载关卡
+        function loadLevel() {
+            const levelData = gameData[currentLevel];
+            sentenceDisplay.textContent = "点击播放按钮听句子";
+            pinyinDisplay.style.display = 'none';
+            
+            // 清空拖拽容器
+            dragContainer.innerHTML = "";
+            currentPositions = {};
+            
+            // 清空所有放置区域（除了方向标签）
+            for (const direction in dropTargets) {
+                dropTargets[direction].innerHTML = direction === "north" ? "北边" : 
+                                                 direction === "south" ? "南边" : 
+                                                 direction === "east" ? "东边" : 
+                                                 direction === "west" ? "西边" : "中心";
+                dropTargets[direction].style.backgroundColor = "";
+            }
+            
+            // 创建圆形元素（固定的）
+            levelData.circles.forEach(word => {
+                const circle = document.createElement('div');
+                circle.className = 'drag-item circle';
+                circle.textContent = word;
+                circle.id = `circle-${word}`;
+                circle.setAttribute('data-type', 'circle');
+                circle.setAttribute('data-word', word);
+                circle.draggable = false; // 圆形不可拖拽
+                
+                // 将圆形放在中心位置
+                dropTargets.center.appendChild(circle);
+                currentPositions[word] = "center";
+            });
+            
+            // 创建方形元素（可拖拽的）
+            levelData.squares.forEach(word => {
+                const square = document.createElement('div');
+                square.className = 'drag-item square';
+                square.textContent = word;
+                square.id = `square-${word}`;
+                square.setAttribute('data-type', 'square');
+                square.setAttribute('data-word', word);
+                square.draggable = true;
+                
+                // 添加拖拽事件监听
+                square.addEventListener('dragstart', dragStart);
+                square.addEventListener('dragend', dragEnd);
+                
+                dragContainer.appendChild(square);
+            });
+            
+            // 更新按钮状态
+            nextBtn.disabled = true;
+            checkBtn.disabled = false;
+        }
+
+        // 拖拽开始
+        function dragStart(e) {
+            draggedElement = this;
+            setTimeout(() => {
+                this.style.opacity = '0.5';
+            }, 0);
+        }
+
+        // 拖拽结束
+        function dragEnd(e) {
+            this.style.opacity = '1';
+            
+            // 找到所有可放置区域
+            const dropZones = document.querySelectorAll('.drop-target');
+            
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', dragOver);
+                zone.addEventListener('dragenter', dragEnter);
+                zone.addEventListener('dragleave', dragLeave);
+                zone.addEventListener('drop', drop);
+            });
+        }
+
+        // 拖拽经过
+        function dragOver(e) {
+            e.preventDefault();
+        }
+
+        // 拖拽进入
+        function dragEnter(e) {
+            e.preventDefault();
+            if (this.id !== "center") {
+                this.style.backgroundColor = '#f0f8ff';
+            }
+        }
+
+        // 拖拽离开
+        function dragLeave(e) {
+            if (this.id !== "center") {
+                this.style.backgroundColor = '';
+            }
+        }
+
+        // 放置
+        function drop(e) {
+            e.preventDefault();
+            if (this.id !== "center") {
+                this.style.backgroundColor = '';
+                
+                // 获取方向
+                const direction = this.id;
+                
+                // 获取拖拽元素的词汇
+                const word = draggedElement.getAttribute('data-word');
+                
+                // 记录位置
+                currentPositions[word] = direction;
+                
+                // 将元素添加到放置区域
+                this.appendChild(draggedElement);
+            }
+        }
+
+        // 检查答案
+        function checkAnswer() {
+            const levelData = gameData[currentLevel];
+            const correct = levelData.correctPosition;
+            let isCorrect = true;
+            
+            // 处理单个或多个正确答案
+            if (Array.isArray(correct)) {
+                // 多个正确答案的情况
+                for (const correctPos of correct) {
+                    const userSquarePosition = currentPositions[correctPos.square];
+                    if (userSquarePosition !== correctPos.direction) {
+                        isCorrect = false;
+                        break;
+                    }
+                }
+            } else {
+                // 单个正确答案的情况
+                const userSquarePosition = currentPositions[correct.square];
+                if (userSquarePosition !== correct.direction) {
+                    isCorrect = false;
+                }
+            }
+            
+            if (isCorrect) {
+                feedbackElement.textContent = "正确! 👍";
+                feedbackElement.className = "feedback correct";
+                score += 10;
+                
+                // 显示原句和拼音
+                sentenceDisplay.textContent = levelData.sentence;
+                pinyinDisplay.textContent = levelData.pinyin;
+                pinyinDisplay.style.display = "block";
+                
+                // 高亮显示正确答案
+                if (Array.isArray(correct)) {
+                    correct.forEach(pos => {
+                        dropTargets[pos.direction].style.backgroundColor = '#d4edda';
+                    });
+                } else {
+                    dropTargets[correct.direction].style.backgroundColor = '#d4edda';
+                }
+            } else {
+                feedbackElement.textContent = "不对! 请再试一次。";
+                feedbackElement.className = "feedback incorrect";
+                
+                // 高亮显示正确答案
+                if (Array.isArray(correct)) {
+                    correct.forEach(pos => {
+                        dropTargets[pos.direction].style.backgroundColor = '#d4edda';
+                    });
+                } else {
+                    dropTargets[correct.direction].style.backgroundColor = '#d4edda';
+                }
+            }
+            
+            feedbackElement.style.display = "block";
+            nextBtn.disabled = false;
+            checkBtn.disabled = true;
+            
+            updateUI();
+        }
+
+        // 播放语音
+        function playSentenceSound() {
+            const levelData = gameData[currentLevel];
+            sentenceDisplay.textContent = levelData.sentence;
+            pinyinDisplay.style.display = 'none';
+            
+            // 使用Web Speech API播放中文
+            const utterance = new SpeechSynthesisUtterance(levelData.sentence);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 0.8; // 稍慢的语速便于学习
+            
+            speechSynthesis.speak(utterance);
+        }
+
+        // 下一关
+        function nextLevel() {
+            currentLevel++;
+            
+            if (currentLevel >= gameData.length) {
+                endGame();
+            } else {
+                loadLevel();
+                feedbackElement.style.display = "none";
+            }
+        }
+
+        // 结束游戏
+        function endGame() {
+            finalScoreElement.textContent = score;
+            gameCompleteElement.style.display = 'block';
+            
+            // 隐藏游戏界面
+            document.querySelector('.game-info').style.display = 'none';
+            document.querySelector('.progress-bar').style.display = 'none';
+            sentenceDisplay.style.display = 'none';
+            pinyinDisplay.style.display = 'none';
+            document.querySelector('.drop-container').style.display = 'none';
+            dragContainer.style.display = 'none';
+            feedbackElement.style.display = 'none';
+            document.querySelector('.controls').style.display = 'none';
+        }
+
+        // 事件监听
+        playSoundBtn.addEventListener('click', playSentenceSound);
+        checkBtn.addEventListener('click', checkAnswer);
+        nextBtn.addEventListener('click', nextLevel);
+        restartBtn.addEventListener('click', initGame);
+
+        // 初始化拖放区域事件
+        const dropZones = document.querySelectorAll('.drop-target');
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', dragOver);
+            zone.addEventListener('dragenter', dragEnter);
+            zone.addEventListener('dragleave', dragLeave);
+            zone.addEventListener('drop', drop);
+        });
+
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+</html>
