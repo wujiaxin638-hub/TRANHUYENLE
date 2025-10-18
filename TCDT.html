@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trò Chơi Đoán Từ Tiếng Trung Thông Minh</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #2575fc;
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .instructions {
+            background-color: #f0f8ff;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .instructions h2 {
+            color: #2575fc;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .instructions p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .character-display {
+            font-size: 6rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+            margin: 10px 0;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            width: 150px;
+            border-radius: 20px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .audio-btn {
+            background-color: #2575fc;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .audio-btn:hover {
+            background-color: #1a5fd8;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .pinyin-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 15px;
+            background-color: #f8f9fa;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            width: 100%;
+        }
+
+        .pinyin-option {
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            border: 2px solid transparent;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .pinyin-option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+            border-color: #2575fc;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .check-btn {
+            background-color: #06d6a0;
+            color: white;
+        }
+
+        .next-btn {
+            background-color: #ff9e00;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .result-area {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .correct {
+            background-color: rgba(6, 214, 160, 0.2);
+            color: #06a078;
+        }
+
+        .incorrect {
+            background-color: rgba(239, 71, 111, 0.2);
+            color: #d00036;
+        }
+
+        .score-area {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .level-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .level-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .level-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #06d6a0, #2575fc);
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            color: white;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .character-display {
+                font-size: 4rem;
+                height: 90px;
+                width: 120px;
+            }
+            
+            .pinyin-option {
+                padding: 12px 20px;
+                font-size: 1.1rem;
+                min-width: 100px;
+            }
+            
+            .btn {
+                padding: 10px 20px;
+                font-size: 1rem;
+            }
+        }
+
+        .selected {
+            border-color: #2575fc;
+            background-color: #e6f2ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Trò Chơi Đoán Từ Tiếng Trung Thông Minh</h1>
+        </header>
+        
+        <div class="instructions">
+            <h2>Hướng dẫn chơi game</h2>
+            <p>1. Nhấn nút "MP3" để nghe phát âm của từ tiếng Trung.</p>
+            <p>2. Chọn pinyin đúng cho từ bạn vừa nghe từ các lựa chọn bên dưới.</p>
+            <p>3. Nhấn "KIỂM TRA" để kiểm tra kết quả.</p>
+            <p>4. Trả lời đúng được +10 điểm, tích lũy 50 điểm sẽ lên cấp.</p>
+            <p>5. Nhấn "下一题" để chuyển sang câu hỏi tiếp theo.</p>
+        </div>
+        
+        <div class="game-area">
+            <div class="level-indicator">
+                <span>Cấp: <span id="level">1</span></span>
+                <div class="level-bar">
+                    <div class="level-progress" id="level-progress" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <div class="character-display" id="character">你</div>
+            
+            <button class="audio-btn" id="audio-btn">
+                <span>MP3</span>
+            </button>
+            
+            <div class="pinyin-options" id="pinyin-options">
+                <!-- Các lựa chọn pinyin sẽ được thêm bằng JavaScript -->
+            </div>
+            
+            <div class="control-buttons">
+                <button class="btn check-btn" id="check-btn">KIỂM TRA</button>
+                <button class="btn next-btn" id="next-btn">下一题</button>
+            </div>
+            
+            <div class="result-area" id="result-area"></div>
+            
+            <div class="score-area">
+                <div>Điểm: <span id="score">0</span></div>
+                <div>Câu hỏi: <span id="question-count">1</span>/<span id="total-questions">10</span></div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Sử dụng từ vựng HSK1 + Web Speech API phát âm</p>
+    </footer>
+
+    <script>
+        // Từ vựng HSK1
+        const vocabulary = [
+            { character: "你", pinyin: "nǐ" },
+            { character: "好", pinyin: "hǎo" },
+            { character: "马丁", pinyin: "Mǎdīng" },
+            { character: "林娜", pinyin: "Línnà" },
+            { character: "您", pinyin: "nín" },
+            { character: "李一民", pinyin: "Lǐ Yīmín" },
+            { character: "阿明", pinyin: "Āmíng" },
+            { character: "零", pinyin: "líng" },
+            { character: "一", pinyin: "yī" },
+            { character: "二", pinyin: "èr" },
+            { character: "五", pinyin: "wǔ" },
+            { character: "八", pinyin: "bā" },
+            { character: "你们", pinyin: "nǐmen" },
+            { character: "老师", pinyin: "lǎoshī" }
+        ];
+
+        // Các pinyin gây nhiễu
+        const distractors = [
+            "nǐ", "hào", "mǎdìng", "línnǎ", "nǐn", "lǐ yìmín", "āmǐng", 
+            "lìng", "yí", "è", "wù", "bá", "nǐmén", "lǎoshì",
+            "ní", "hǎo", "mádīng", "línnà", "nín", "lǐ yīmín", "āmíng",
+            "líng", "yī", "èr", "wǔ", "bā", "nǐmen", "lǎoshī"
+        ];
+
+        // Biến toàn cục
+        let currentWord = {};
+        let score = 0;
+        let level = 1;
+        let questionCount = 1;
+        let totalQuestions = 10;
+        let isAnswered = false;
+        let selectedOption = null;
+
+        // Khởi tạo game
+        function initGame() {
+            // Chọn từ ngẫu nhiên
+            currentWord = vocabulary[Math.floor(Math.random() * vocabulary.length)];
+            
+            // Hiển thị chữ Hán
+            document.getElementById('character').textContent = currentWord.character;
+            
+            // Tạo các lựa chọn pinyin
+            createPinyinOptions();
+            
+            // Xóa kết quả trước đó
+            document.getElementById('result-area').textContent = '';
+            document.getElementById('result-area').className = 'result-area';
+            
+            // Cập nhật số câu hỏi
+            document.getElementById('question-count').textContent = questionCount;
+            document.getElementById('total-questions').textContent = totalQuestions;
+            
+            isAnswered = false;
+            selectedOption = null;
+        }
+
+        // Tạo các lựa chọn pinyin
+        function createPinyinOptions() {
+            const optionsArea = document.getElementById('pinyin-options');
+            optionsArea.innerHTML = '';
+            
+            // Tạo mảng các lựa chọn (bao gồm đáp án đúng)
+            const options = [currentWord.pinyin];
+            
+            // Thêm 3 pinyin gây nhiễu ngẫu nhiên
+            let addedDistractors = 0;
+            while (addedDistractors < 3) {
+                const randomDistractor = distractors[Math.floor(Math.random() * distractors.length)];
+                // Đảm bảo không trùng với đáp án đúng và không trùng với các pinyin gây nhiễu đã thêm
+                if (randomDistractor !== currentWord.pinyin && !options.includes(randomDistractor)) {
+                    options.push(randomDistractor);
+                    addedDistractors++;
+                }
+            }
+            
+            // Trộn ngẫu nhiên các lựa chọn
+            shuffleArray(options);
+            
+            // Thêm vào DOM
+            options.forEach(option => {
+                const element = document.createElement('div');
+                element.className = 'pinyin-option';
+                element.textContent = option;
+                element.dataset.value = option;
+                
+                // Sự kiện click
+                element.addEventListener('click', () => {
+                    if (!isAnswered) {
+                        // Xóa lựa chọn trước đó
+                        const previouslySelected = document.querySelector('.pinyin-option.selected');
+                        if (previouslySelected) {
+                            previouslySelected.classList.remove('selected');
+                        }
+                        
+                        // Đánh dấu lựa chọn hiện tại
+                        element.classList.add('selected');
+                        selectedOption = option;
+                    }
+                });
+                
+                optionsArea.appendChild(element);
+            });
+        }
+
+        // Trộn mảng
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Kiểm tra kết quả
+        function checkAnswer() {
+            if (isAnswered || !selectedOption) {
+                if (!selectedOption) {
+                    document.getElementById('result-area').textContent = 'Vui lòng chọn một đáp án!';
+                    document.getElementById('result-area').className = 'result-area incorrect';
+                }
+                return;
+            }
+            
+            const resultArea = document.getElementById('result-area');
+            
+            if (selectedOption === currentWord.pinyin) {
+                // Đúng
+                resultArea.textContent = `Chính xác! Pinyin đúng là: ${currentWord.pinyin}`;
+                resultArea.className = 'result-area correct';
+                score += 10;
+                
+                // Cập nhật điểm
+                document.getElementById('score').textContent = score;
+                
+                // Kiểm tra nâng cấp
+                if (score >= level * 50) {
+                    level++;
+                    document.getElementById('level').textContent = level;
+                    resultArea.textContent += ` Chúc mừng! Bạn đã lên cấp ${level}!`;
+                }
+                
+                // Cập nhật thanh tiến trình
+                const progress = Math.min(100, (score % 50) * 2);
+                document.getElementById('level-progress').style.width = `${progress}%`;
+            } else {
+                // Sai
+                resultArea.textContent = `Sai rồi! Pinyin đúng là: ${currentWord.pinyin}`;
+                resultArea.className = 'result-area incorrect';
+            }
+            
+            isAnswered = true;
+        }
+
+        // Chuyển câu hỏi tiếp theo
+        function nextQuestion() {
+            if (questionCount < totalQuestions) {
+                questionCount++;
+                initGame();
+            } else {
+                // Kết thúc game
+                document.getElementById('result-area').textContent = `Trò chơi kết thúc! Điểm cuối cùng của bạn: ${score}`;
+                document.getElementById('result-area').className = 'result-area correct';
+                
+                // Vô hiệu hóa nút tiếp theo
+                document.getElementById('next-btn').disabled = true;
+            }
+        }
+
+        // Phát âm bằng Web Speech API
+        function speakText() {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(currentWord.character);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert('Trình duyệt của bạn không hỗ trợ Web Speech API');
+            }
+        }
+
+        // Sự kiện khi trang được tải
+        document.addEventListener('DOMContentLoaded', () => {
+            initGame();
+            
+            // Sự kiện nút MP3
+            document.getElementById('audio-btn').addEventListener('click', speakText);
+            
+            // Sự kiện nút kiểm tra
+            document.getElementById('check-btn').addEventListener('click', checkAnswer);
+            
+            // Sự kiện nút tiếp theo
+            document.getElementById('next-btn').addEventListener('click', nextQuestion);
+        });
+    </script>
+</body>
+</html>
