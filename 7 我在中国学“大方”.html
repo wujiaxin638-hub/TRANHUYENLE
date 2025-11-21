@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互动中文生词表</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #6b8cbc;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --text-color: #333;
+            --light-color: #f8f9fa;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            width: 100%;
+            max-width: 500px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            box-shadow: var(--shadow);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
+        }
+
+        .stats {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .word {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+        }
+
+        .pinyin {
+            color: var(--accent-color);
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .pronunciation-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 8px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 15px;
+            transition: background-color 0.3s ease;
+            align-self: flex-start;
+        }
+
+        .pronunciation-btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .pronunciation-btn.playing {
+            background-color: var(--accent-color);
+        }
+
+        .vietnamese {
+            color: var(--success-color);
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+
+        .example {
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .example-chinese {
+            margin-bottom: 5px;
+        }
+
+        .example-vietnamese {
+            font-style: italic;
+            color: #666;
+        }
+
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>互动中文生词表</h1>
+        </header>
+        
+        <div class="search-container">
+            <input type="text" class="search-box" id="searchInput" placeholder="搜索中文、拼音、越南语或例句... (Ctrl+/)">
+        </div>
+        
+        <div class="stats">
+            共 <span id="wordCount">0</span> 个词汇
+        </div>
+        
+        <div class="cards-grid" id="cardsContainer">
+            <!-- 卡片将通过JavaScript动态生成 -->
+        </div>
+    </div>
+
+    <script>
+        // 词汇数据
+        const vocabulary = [
+            {
+                chinese: "大方",
+                pinyin: "dà fāng",
+                vietnamese: "hào phóng, rộng rãi",
+                exampleChinese: "他很大方，总是请朋友吃饭。",
+                exampleVietnamese: "Anh ấy rất hào phóng, luôn mời bạn bè ăn cơm."
+            },
+            {
+                chinese: "期间",
+                pinyin: "qī jiān",
+                vietnamese: "trong thời gian, trong giai đoạn",
+                exampleChinese: "在会议期间，请不要使用手机。",
+                exampleVietnamese: "Trong thời gian họp, xin đừng sử dụng điện thoại."
+            },
+            {
+                chinese: "邀请",
+                pinyin: "yāo qǐng",
+                vietnamese: "mời",
+                exampleChinese: "他邀请我参加他的生日派对。",
+                exampleVietnamese: "Anh ấy mời tôi tham dự tiệc sinh nhật của anh ấy."
+            },
+            {
+                chinese: "新郎",
+                pinyin: "xīn láng",
+                vietnamese: "chú rể",
+                exampleChinese: "新郎看起来很紧张。",
+                exampleVietnamese: "Chú rể trông có vẻ rất căng thẳng."
+            },
+            {
+                chinese: "新娘",
+                pinyin: "xīn niáng",
+                vietnamese: "cô dâu",
+                exampleChinese: "新娘穿着白色的婚纱。",
+                exampleVietnamese: "Cô dâu mặc váy cưới màu trắng."
+            },
+            {
+                chinese: "敬酒",
+                pinyin: "jìng jiǔ",
+                vietnamese: "nâng ly chúc mừng",
+                exampleChinese: "在婚宴上，新郎新娘要向客人敬酒。",
+                exampleVietnamese: "Trong tiệc cưới, cô dâu chú rể phải nâng ly chúc mừng khách."
+            },
+            {
+                chinese: "贺卡",
+                pinyin: "hè kǎ",
+                vietnamese: "thiệp chúc mừng",
+                exampleChinese: "我收到了一张生日贺卡。",
+                exampleVietnamese: "Tôi nhận được một tấm thiệp chúc mừng sinh nhật."
+            },
+            {
+                chinese: "神秘",
+                pinyin: "shén mì",
+                vietnamese: "thần bí, bí ẩn",
+                exampleChinese: "这个故事很神秘。",
+                exampleVietnamese: "Câu chuyện này rất thần bí."
+            },
+            {
+                chinese: "护身符",
+                pinyin: "hù shēn fú",
+                vietnamese: "bùa hộ mệnh",
+                exampleChinese: "她戴着奶奶给的护身符。",
+                exampleVietnamese: "Cô ấy đeo bùa hộ mệnh bà nội cho."
+            },
+            {
+                chinese: "说明",
+                pinyin: "shuō míng",
+                vietnamese: "giải thích, thuyết minh",
+                exampleChinese: "请说明你的理由。",
+                exampleVietnamese: "Xin hãy giải thích lý do của bạn."
+            },
+            {
+                chinese: "反正",
+                pinyin: "fǎn zhèng",
+                vietnamese: "dù sao đi nữa",
+                exampleChinese: "反正我也没事，就陪你去吧。",
+                exampleVietnamese: "Dù sao tôi cũng không có việc gì, tôi sẽ đi cùng bạn."
+            },
+            {
+                chinese: "掏",
+                pinyin: "tāo",
+                vietnamese: "móc, lấy ra",
+                exampleChinese: "他从口袋里掏出一张照片。",
+                exampleVietnamese: "Anh ấy móc từ trong túi ra một tấm ảnh."
+            },
+            {
+                chinese: "塞",
+                pinyin: "sāi",
+                vietnamese: "nhét, đút",
+                exampleChinese: "他把信塞进了门缝里。",
+                exampleVietnamese: "Anh ấy nhét bức thư vào khe cửa."
+            },
+            {
+                chinese: "穷鬼",
+                pinyin: "qióng guǐ",
+                vietnamese: "kẻ nghèo khổ",
+                exampleChinese: "别叫我穷鬼，我也有尊严。",
+                exampleVietnamese: "Đừng gọi tôi là kẻ nghèo khổ, tôi cũng có lòng tự trọng."
+            },
+            {
+                chinese: "物价",
+                pinyin: "wù jià",
+                vietnamese: "giá cả hàng hóa",
+                exampleChinese: "最近物价上涨了很多。",
+                exampleVietnamese: "Gần đây giá cả hàng hóa tăng lên rất nhiều."
+            },
+            {
+                chinese: "惊喜",
+                pinyin: "jīng xǐ",
+                vietnamese: "ngạc nhiên thú vị",
+                exampleChinese: "他为我准备了一个惊喜派对。",
+                exampleVietnamese: "Anh ấy chuẩn bị cho tôi một bữa tiệc bất ngờ."
+            },
+            {
+                chinese: "轻松",
+                pinyin: "qīng sōng",
+                vietnamese: "nhẹ nhàng, thoải mái",
+                exampleChinese: "考试结束后，我感到很轻松。",
+                exampleVietnamese: "Sau khi kết thúc kỳ thi, tôi cảm thấy rất thoải mái."
+            },
+            {
+                chinese: "待",
+                pinyin: "dāi",
+                vietnamese: "ở, đợi",
+                exampleChinese: "你在家待着，我马上回来。",
+                exampleVietnamese: "Bạn ở nhà đợi, tôi sẽ về ngay."
+            },
+            {
+                chinese: "似乎",
+                pinyin: "sì hū",
+                vietnamese: "dường như, hình như",
+                exampleChinese: "他似乎不知道这件事。",
+                exampleVietnamese: "Hình như anh ấy không biết chuyện này."
+            },
+            {
+                chinese: "在乎",
+                pinyin: "zài hu",
+                vietnamese: "quan tâm, để ý",
+                exampleChinese: "我不在乎别人怎么说。",
+                exampleVietnamese: "Tôi không quan tâm người khác nói gì."
+            },
+            {
+                chinese: "面子",
+                pinyin: "miàn zi",
+                vietnamese: "thể diện",
+                exampleChinese: "他很爱面子。",
+                exampleVietnamese: "Anh ấy rất coi trọng thể diện."
+            },
+            {
+                chinese: "偶尔",
+                pinyin: "ǒu ěr",
+                vietnamese: "thỉnh thoảng",
+                exampleChinese: "我偶尔会去那家咖啡店。",
+                exampleVietnamese: "Thỉnh thoảng tôi sẽ đến quán cà phê đó."
+            },
+            {
+                chinese: "环境",
+                pinyin: "huán jìng",
+                vietnamese: "môi trường",
+                exampleChinese: "我们要保护环境。",
+                exampleVietnamese: "Chúng ta phải bảo vệ môi trường."
+            },
+            {
+                chinese: "优雅",
+                pinyin: "yōu yǎ",
+                vietnamese: "thanh lịch, tao nhã",
+                exampleChinese: "她的举止很优雅。",
+                exampleVietnamese: "Cử chỉ của cô ấy rất thanh lịch."
+            },
+            {
+                chinese: "抢",
+                pinyin: "qiǎng",
+                vietnamese: "cướp, giành",
+                exampleChinese: "不要抢别人的东西。",
+                exampleVietnamese: "Đừng cướp đồ của người khác."
+            },
+            {
+                chinese: "撕",
+                pinyin: "sī",
+                vietnamese: "xé",
+                exampleChinese: "他生气地撕了那封信。",
+                exampleVietnamese: "Anh ấy tức giận xé lá thư đó."
+            },
+            {
+                chinese: "价签",
+                pinyin: "jià qiān",
+                vietnamese: "nhãn giá",
+                exampleChinese: "这件衣服没有价签。",
+                exampleVietnamese: "Chiếc áo này không có nhãn giá."
+            },
+            {
+                chinese: "花招",
+                pinyin: "huā zhāo",
+                vietnamese: "thủ đoạn, mánh khóe",
+                exampleChinese: "别耍花招了，老实交代吧。",
+                exampleVietnamese: "Đừng giở thủ đoạn nữa, thành thật khai báo đi."
+            },
+            {
+                chinese: "马虎",
+                pinyin: "mǎ hu",
+                vietnamese: "cẩu thả, qua loa",
+                exampleChinese: "他做事很马虎。",
+                exampleVietnamese: "Anh ấy làm việc rất cẩu thả."
+            },
+            {
+                chinese: "传统",
+                pinyin: "chuán tǒng",
+                vietnamese: "truyền thống",
+                exampleChinese: "春节是中国的传统节日。",
+                exampleVietnamese: "Tết Nguyên Đán là ngày lễ truyền thống của Trung Quốc."
+            },
+            {
+                chinese: "评价",
+                pinyin: "píng jià",
+                vietnamese: "đánh giá, nhận xét",
+                exampleChinese: "老师给了我很高的评价。",
+                exampleVietnamese: "Giáo viên đã cho tôi đánh giá rất cao."
+            },
+            {
+                chinese: "就算",
+                pinyin: "jiù suàn",
+                vietnamese: "cho dù, dẫu rằng",
+                exampleChinese: "就算下雨，我也要去。",
+                exampleVietnamese: "Cho dù trời mưa, tôi cũng phải đi."
+            },
+            {
+                chinese: "能力",
+                pinyin: "néng lì",
+                vietnamese: "năng lực, khả năng",
+                exampleChinese: "他有能力完成这个任务。",
+                exampleVietnamese: "Anh ấy có năng lực hoàn thành nhiệm vụ này."
+            },
+            {
+                chinese: "强",
+                pinyin: "qiáng",
+                vietnamese: "mạnh mẽ",
+                exampleChinese: "他的意志很强。",
+                exampleVietnamese: "Ý chí của anh ấy rất mạnh mẽ."
+            },
+            {
+                chinese: "人均",
+                pinyin: "rén jūn",
+                vietnamese: "bình quân đầu người",
+                exampleChinese: "这个城市的人均收入很高。",
+                exampleVietnamese: "Thu nhập bình quân đầu người của thành phố này rất cao."
+            },
+            {
+                chinese: "收入",
+                pinyin: "shōu rù",
+                vietnamese: "thu nhập",
+                exampleChinese: "他的月收入是一万元。",
+                exampleVietnamese: "Thu nhập hàng tháng của anh ấy là mười nghìn tệ."
+            },
+            {
+                chinese: "理想",
+                pinyin: "lǐ xiǎng",
+                vietnamese: "lý tưởng",
+                exampleChinese: "我的理想是成为一名医生。",
+                exampleVietnamese: "Lý tưởng của tôi là trở thành một bác sĩ."
+            },
+            {
+                chinese: "场所",
+                pinyin: "chǎng suǒ",
+                vietnamese: "địa điểm, nơi chốn",
+                exampleChinese: "这是一个公共场所。",
+                exampleVietnamese: "Đây là một nơi công cộng."
+            },
+            {
+                chinese: "自然",
+                pinyin: "zì rán",
+                vietnamese: "tự nhiên",
+                exampleChinese: "我们要保护自然环境。",
+                exampleVietnamese: "Chúng ta phải bảo vệ môi trường tự nhiên."
+            },
+            {
+                chinese: "富",
+                pinyin: "fù",
+                vietnamese: "giàu có",
+                exampleChinese: "他家里很富。",
+                exampleVietnamese: "Gia đình anh ấy rất giàu có."
+            },
+            {
+                chinese: "捐",
+                pinyin: "juān",
+                vietnamese: "quyên góp, hiến tặng",
+                exampleChinese: "他向灾区捐了很多钱。",
+                exampleVietnamese: "Anh ấy đã quyên góp rất nhiều tiền cho vùng thiên tai."
+            },
+            {
+                chinese: "观念",
+                pinyin: "guān niàn",
+                vietnamese: "quan niệm",
+                exampleChinese: "他们的观念很传统。",
+                exampleVietnamese: "Quan niệm của họ rất truyền thống."
+            },
+            {
+                chinese: "办学",
+                pinyin: "bàn xué",
+                vietnamese: "mở trường, thành lập trường học",
+                exampleChinese: "他们打算在农村办学。",
+                exampleVietnamese: "Họ dự định mở trường học ở nông thôn."
+            },
+            {
+                chinese: "追求",
+                pinyin: "zhuī qiú",
+                vietnamese: "theo đuổi",
+                exampleChinese: "他一直在追求自己的梦想。",
+                exampleVietnamese: "Anh ấy luôn theo đuổi ước mơ của mình."
+            },
+            {
+                chinese: "要不然",
+                pinyin: "yào bù rán",
+                vietnamese: "nếu không thì",
+                exampleChinese: "快走吧，要不然要迟到了。",
+                exampleVietnamese: "Đi nhanh lên, nếu không thì sẽ muộn mất."
+            }
+        ];
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            const cardsContainer = document.getElementById('cardsContainer');
+            const searchInput = document.getElementById('searchInput');
+            const wordCount = document.getElementById('wordCount');
+            
+            // 显示词汇总数
+            wordCount.textContent = vocabulary.length;
+            
+            // 渲染所有卡片
+            renderCards(vocabulary);
+            
+            // 搜索功能
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase().trim();
+                const filteredVocab = vocabulary.filter(item => 
+                    item.chinese.toLowerCase().includes(searchTerm) ||
+                    item.pinyin.toLowerCase().includes(searchTerm) ||
+                    item.vietnamese.toLowerCase().includes(searchTerm) ||
+                    item.exampleChinese.toLowerCase().includes(searchTerm) ||
+                    item.exampleVietnamese.toLowerCase().includes(searchTerm)
+                );
+                
+                renderCards(filteredVocab);
+            });
+            
+            // 添加快捷键 Ctrl+/
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === '/') {
+                    e.preventDefault();
+                    searchInput.focus();
+                }
+            });
+        });
+
+        // 渲染卡片函数
+        function renderCards(vocabList) {
+            const cardsContainer = document.getElementById('cardsContainer');
+            cardsContainer.innerHTML = '';
+            
+            if (vocabList.length === 0) {
+                cardsContainer.innerHTML = '<div class="no-results">没有找到匹配的词汇</div>';
+                return;
+            }
+            
+            vocabList.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                card.innerHTML = `
+                    <div class="word">${item.chinese}</div>
+                    <div class="pinyin">${item.pinyin}</div>
+                    <button class="pronunciation-btn" data-word="${item.chinese}">
+                        <span>🔊</span> 发音
+                    </button>
+                    <div class="vietnamese">${item.vietnamese}</div>
+                    <div class="example">
+                        <div class="example-chinese">${item.exampleChinese}</div>
+                        <div class="example-vietnamese">${item.exampleVietnamese}</div>
+                    </div>
+                `;
+                
+                cardsContainer.appendChild(card);
+            });
+            
+            // 添加发音按钮事件
+            document.querySelectorAll('.pronunciation-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const word = this.getAttribute('data-word');
+                    speakWord(word, this);
+                });
+            });
+        }
+
+        // 发音函数
+        function speakWord(word, button) {
+            if ('speechSynthesis' in window) {
+                // 停止当前正在播放的语音
+                speechSynthesis.cancel();
+                
+                // 创建语音对象
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.9;
+                
+                // 按钮状态变化
+                button.classList.add('playing');
+                button.innerHTML = '<span>🔊</span> 播放中...';
+                
+                // 语音播放结束后的回调
+                utterance.onend = function() {
+                    button.classList.remove('playing');
+                    button.innerHTML = '<span>🔊</span> 发音';
+                };
+                
+                // 播放语音
+                speechSynthesis.speak(utterance);
+            } else {
+                alert('您的浏览器不支持语音合成功能，请使用Chrome、Edge或Safari等现代浏览器。');
+            }
+        }
+    </script>
+</body>
+</html>
